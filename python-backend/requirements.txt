@@ -1,49 +1,37 @@
 # BreezeFrame Python Backend Requirements
-# Installation: pip install -r requirements.txt
+# Version: 2.1.0
 
-# Framework web
-Flask==2.3.3
-Flask-CORS==4.0.0
+# Core Web Framework
+flask>=2.3.0
+flask-cors>=4.3.0
+gunicorn>=21.2.0
 
-# Intelligence artificielle et vision par ordinateur
-tensorflow==2.13.0
-opencv-python==4.8.1.78
-numpy==1.24.3
-Pillow==10.0.1
+# AI/ML Libraries
+tensorflow>=2.13.0
+tensorflow-hub>=0.14.0
+opencv-python>=4.8.0
+numpy>=1.24.0
+scikit-image>=0.21.0
+scikit-learn>=1.3.0
 
-# Utilitaires
-requests==2.31.0
-python-dotenv==1.0.0
+# Image Processing
+pillow>=10.0.0
+imageio>=2.31.0
 
-# Développement et tests
-pytest==7.4.2
-pytest-flask==1.2.0
+# Data Processing
+pandas>=2.0.0
+matplotlib>=3.7.0
+seaborn>=0.12.0
 
-# Production
-gunicorn==21.2.0
-waitress==2.1.2
+# Utilities
+python-dotenv>=1.0.0
+requests>=2.31.0
+tqdm>=4.65.0
 
-# Monitoring et logging
-psutil==5.9.5
+# Development & Testing
+pytest>=7.4.0
+black>=23.7.0
+flake8>=6.0.0
 
-# Sécurité
-cryptography==41.0.4
-
-# Base de données (optionnel)
-psycopg2-binary==2.9.7
-SQLAlchemy==2.0.21
-
-# Formats de données
-pyyaml==6.0.1
-jsonschema==4.19.1
-
-# Optimisation d'images
-imageio==2.31.3
-scikit-image==0.21.0
-
-# Calculs scientifiques
-scipy==1.11.3
-pandas==2.1.1
-
-# Gestion des environnements
-python-decouple==3.8
+# Optional GPU Support (uncomment if needed)
+# tensorflow-gpu>=2.13.0

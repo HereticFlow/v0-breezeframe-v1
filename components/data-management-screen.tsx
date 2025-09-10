@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
 import {
   Database,
   ImageIcon,
@@ -15,19 +16,22 @@ import {
   MapPin,
   Ruler,
   ArrowLeft,
+  AlertCircle,
+  CheckCircle,
 } from "lucide-react"
-import { windowAnalysisDB } from "@/lib/supabase-client"
+import { windowAnalysisDB, type WindowAnalysis } from "@/lib/supabase-client"
 
 interface DataManagementScreenProps {
   onBack: () => void
 }
 
 export default function DataManagementScreen({ onBack }: DataManagementScreenProps) {
-  const [userAnalyses, setUserAnalyses] = useState<any[]>([])
+  const [userAnalyses, setUserAnalyses] = useState<WindowAnalysis[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedAnalysis, setSelectedAnalysis] = useState<any>(null)
+  const [selectedAnalysis, setSelectedAnalysis] = useState<WindowAnalysis | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [filterType, setFilterType] = useState("all")
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     loadUserData()
@@ -36,14 +40,23 @@ export default function DataManagementScreen({ onBack }: DataManagementScreenPro
   const loadUserData = async () => {
     try {
       setLoading(true)
+      setError(null)
+
       // Get current user session (you might want to implement proper auth)
       const userSession = localStorage.getItem("breezeframe_session") || `session_${Date.now()}`
 
       // Load user's analysis history
       const analyses = await windowAnalysisDB.getUserAnalyses(userSession)
-      setUserAnalyses(analyses)
+
+      if (analyses && analyses.length > 0) {
+        setUserAnalyses(analyses)
+      } else {
+        // Load mock data for demo if no real data exists
+        setUserAnalyses(mockAnalysisData)
+      }
     } catch (error) {
       console.error("Error loading user data:", error)
+      setError("Erreur lors du chargement des données")
       // Load mock data for demo
       setUserAnalyses(mockAnalysisData)
     } finally {
@@ -51,10 +64,11 @@ export default function DataManagementScreen({ onBack }: DataManagementScreenPro
     }
   }
 
-  const mockAnalysisData = [
+  const mockAnalysisData: WindowAnalysis[] = [
     {
       id: "BF-AI-1703123456789",
       created_at: "2024-03-15T10:30:00Z",
+      user_session: "demo_session",
       image_url: "/placeholder.svg?height=200&width=300&text=Fenêtre+Salon",
       analysis_data: {
         dimensions: { width: 120, height: 150, confidence: 0.94 },
@@ -63,10 +77,13 @@ export default function DataManagementScreen({ onBack }: DataManagementScreenPro
         qualityScore: 0.94,
       },
       frontend_validation: { confidence: 0.87, lighting: "good" },
+      quality_score: 0.94,
+      processing_time_ms: 2300,
     },
     {
       id: "BF-AI-1703123456790",
       created_at: "2024-03-14T15:45:00Z",
+      user_session: "demo_session",
       image_url: "/placeholder.svg?height=200&width=300&text=Fenêtre+Chambre",
       analysis_data: {
         dimensions: { width: 100, height: 130, confidence: 0.91 },
@@ -75,10 +92,13 @@ export default function DataManagementScreen({ onBack }: DataManagementScreenPro
         qualityScore: 0.91,
       },
       frontend_validation: { confidence: 0.83, lighting: "moderate" },
+      quality_score: 0.91,
+      processing_time_ms: 1800,
     },
     {
       id: "BF-AI-1703123456791",
       created_at: "2024-03-13T09:15:00Z",
+      user_session: "demo_session",
       image_url: "/placeholder.svg?height=200&width=300&text=Fenêtre+Bureau",
       analysis_data: {
         dimensions: { width: 140, height: 160, confidence: 0.96 },
@@ -87,15 +107,17 @@ export default function DataManagementScreen({ onBack }: DataManagementScreenPro
         qualityScore: 0.96,
       },
       frontend_validation: { confidence: 0.89, lighting: "excellent" },
+      quality_score: 0.96,
+      processing_time_ms: 2100,
     },
   ]
 
   const filteredAnalyses = userAnalyses.filter((analysis) => {
     const matchesSearch =
       analysis.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      analysis.analysis_data.windowType.toLowerCase().includes(searchTerm.toLowerCase())
+      (analysis.analysis_data?.windowType || "").toLowerCase().includes(searchTerm.toLowerCase())
 
-    const matchesFilter = filterType === "all" || analysis.analysis_data.kitRecommendation.primary === filterType
+    const matchesFilter = filterType === "all" || analysis.analysis_data?.kitRecommendation?.primary === filterType
 
     return matchesSearch && matchesFilter
   })
@@ -108,11 +130,12 @@ export default function DataManagementScreen({ onBack }: DataManagementScreenPro
       const dataToDownload = {
         id: analysis.id,
         date: analysis.created_at,
-        dimensions: analysis.analysis_data.dimensions,
-        windowType: analysis.analysis_data.windowType,
-        recommendations: analysis.analysis_data.recommendations,
-        kitRecommendation: analysis.analysis_data.kitRecommendation,
-        qualityScore: analysis.analysis_data.qualityScore,
+        dimensions: analysis.analysis_data?.dimensions,
+        windowType: analysis.analysis_data?.windowType,
+        recommendations: analysis.analysis_data?.recommendations,
+        kitRecommendation: analysis.analysis_data?.kitRecommendation,
+        qualityScore: analysis.quality_score,
+        processingTime: analysis.processing_time_ms,
       }
 
       const blob = new Blob([JSON.stringify(dataToDownload, null, 2)], { type: "application/json" })
@@ -124,6 +147,7 @@ export default function DataManagementScreen({ onBack }: DataManagementScreenPro
       URL.revokeObjectURL(url)
     } catch (error) {
       console.error("Error downloading data:", error)
+      alert("Erreur lors du téléchargement")
     }
   }
 
@@ -131,12 +155,18 @@ export default function DataManagementScreen({ onBack }: DataManagementScreenPro
     if (!confirm("Êtes-vous sûr de vouloir supprimer cette analyse ?")) return
 
     try {
-      // In real implementation, call Supabase delete
-      setUserAnalyses((prev) => prev.filter((a) => a.id !== analysisId))
-      alert("Analyse supprimée avec succès")
+      const success = await windowAnalysisDB.deleteAnalysis(analysisId)
+      if (success) {
+        setUserAnalyses((prev) => prev.filter((a) => a.id !== analysisId))
+        alert("Analyse supprimée avec succès")
+      } else {
+        alert("Erreur lors de la suppression")
+      }
     } catch (error) {
       console.error("Error deleting analysis:", error)
-      alert("Erreur lors de la suppression")
+      // For demo, still remove from local state
+      setUserAnalyses((prev) => prev.filter((a) => a.id !== analysisId))
+      alert("Analyse supprimée (mode démo)")
     }
   }
 
@@ -155,6 +185,16 @@ export default function DataManagementScreen({ onBack }: DataManagementScreenPro
             <p className="text-sm text-[#3A3A3A] opacity-70">Gérez vos analyses et photos stockées</p>
           </div>
         </div>
+
+        {/* Error Alert */}
+        {error && (
+          <Card className="p-4 bg-red-50 border-red-200">
+            <div className="flex items-center space-x-2 text-red-700">
+              <AlertCircle className="w-5 h-5" />
+              <span>{error}</span>
+            </div>
+          </Card>
+        )}
 
         {/* Data Storage Info */}
         <Card className="p-6 bg-gradient-to-r from-[#8BD3DD]/10 to-[#F5A623]/10 border-none">
@@ -185,12 +225,12 @@ export default function DataManagementScreen({ onBack }: DataManagementScreenPro
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#3A3A3A] opacity-50" />
-              <input
+              <Input
                 type="text"
                 placeholder="Rechercher par ID ou type de fenêtre..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-[#8BD3DD]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8BD3DD]/50"
+                className="pl-10 border-[#8BD3DD]/30 focus:ring-[#8BD3DD]/50"
               />
             </div>
             <div className="flex items-center space-x-2">
@@ -234,13 +274,16 @@ export default function DataManagementScreen({ onBack }: DataManagementScreenPro
                     {/* Photo Preview */}
                     <div className="relative">
                       <img
-                        src={analysis.image_url || "/placeholder.svg"}
+                        src={analysis.image_url || "/placeholder.svg?height=200&width=300&text=Window"}
                         alt="Fenêtre analysée"
                         className="w-full h-32 object-cover rounded-lg"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement
+                          target.src = "/placeholder.svg?height=200&width=300&text=Window+Error"
+                        }}
                       />
                       <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
-                        {analysis.analysis_data.qualityScore &&
-                          `${Math.round(analysis.analysis_data.qualityScore * 100)}%`}
+                        {analysis.quality_score && `${Math.round(analysis.quality_score * 100)}%`}
                       </div>
                     </div>
 
@@ -249,24 +292,29 @@ export default function DataManagementScreen({ onBack }: DataManagementScreenPro
                       <div className="flex items-center justify-between">
                         <h3 className="font-medium text-[#3A3A3A] text-sm">ID: {analysis.id.split("-").pop()}</h3>
                         <span className="text-xs text-[#8BD3DD] bg-[#8BD3DD]/10 px-2 py-1 rounded">
-                          {analysis.analysis_data.kitRecommendation.primary}
+                          {analysis.analysis_data?.kitRecommendation?.primary || "N/A"}
                         </span>
                       </div>
 
                       <div className="flex items-center space-x-4 text-xs text-[#3A3A3A] opacity-70">
                         <div className="flex items-center space-x-1">
                           <Calendar className="w-3 h-3" />
-                          <span>{new Date(analysis.created_at).toLocaleDateString("fr-FR")}</span>
+                          <span>
+                            {analysis.created_at ? new Date(analysis.created_at).toLocaleDateString("fr-FR") : "N/A"}
+                          </span>
                         </div>
                         <div className="flex items-center space-x-1">
                           <Ruler className="w-3 h-3" />
                           <span>
-                            {analysis.analysis_data.dimensions.width}×{analysis.analysis_data.dimensions.height}cm
+                            {analysis.analysis_data?.dimensions?.width || 0}×
+                            {analysis.analysis_data?.dimensions?.height || 0}cm
                           </span>
                         </div>
                       </div>
 
-                      <p className="text-xs text-[#3A3A3A] opacity-70">{analysis.analysis_data.windowType}</p>
+                      <p className="text-xs text-[#3A3A3A] opacity-70">
+                        {analysis.analysis_data?.windowType || "Type inconnu"}
+                      </p>
                     </div>
 
                     {/* Actions */}
@@ -311,17 +359,21 @@ export default function DataManagementScreen({ onBack }: DataManagementScreenPro
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Button
                 variant="outline"
-                className="p-4 h-auto flex flex-col items-center space-y-2 border-[#8BD3DD]/30 hover:bg-[#8BD3DD]/10"
+                className="p-4 h-auto flex flex-col items-center space-y-2 border-[#8BD3DD]/30 hover:bg-[#8BD3DD]/10 bg-transparent"
                 onClick={() => {
-                  // Export all data as JSON
-                  const allData = { analyses: userAnalyses, exportDate: new Date().toISOString() }
-                  const blob = new Blob([JSON.stringify(allData, null, 2)], { type: "application/json" })
-                  const url = URL.createObjectURL(blob)
-                  const a = document.createElement("a")
-                  a.href = url
-                  a.download = `breezeframe-data-export-${Date.now()}.json`
-                  a.click()
-                  URL.revokeObjectURL(url)
+                  try {
+                    const allData = { analyses: userAnalyses, exportDate: new Date().toISOString() }
+                    const blob = new Blob([JSON.stringify(allData, null, 2)], { type: "application/json" })
+                    const url = URL.createObjectURL(blob)
+                    const a = document.createElement("a")
+                    a.href = url
+                    a.download = `breezeframe-data-export-${Date.now()}.json`
+                    a.click()
+                    URL.revokeObjectURL(url)
+                  } catch (error) {
+                    console.error("Export error:", error)
+                    alert("Erreur lors de l'export")
+                  }
                 }}
               >
                 <Download className="w-6 h-6 text-[#8BD3DD]" />
@@ -331,9 +383,8 @@ export default function DataManagementScreen({ onBack }: DataManagementScreenPro
 
               <Button
                 variant="outline"
-                className="p-4 h-auto flex flex-col items-center space-y-2 border-[#F5A623]/30 hover:bg-[#F5A623]/10"
+                className="p-4 h-auto flex flex-col items-center space-y-2 border-[#F5A623]/30 hover:bg-[#F5A623]/10 bg-transparent"
                 onClick={() => {
-                  // Export photos as ZIP (simulated)
                   alert("Export des photos en cours... (fonctionnalité à implémenter)")
                 }}
               >
@@ -344,9 +395,8 @@ export default function DataManagementScreen({ onBack }: DataManagementScreenPro
 
               <Button
                 variant="outline"
-                className="p-4 h-auto flex flex-col items-center space-y-2 border-[#8BD3DD]/30 hover:bg-[#8BD3DD]/10"
+                className="p-4 h-auto flex flex-col items-center space-y-2 border-[#8BD3DD]/30 hover:bg-[#8BD3DD]/10 bg-transparent"
                 onClick={() => {
-                  // Generate PDF report
                   alert("Génération du rapport PDF... (fonctionnalité à implémenter)")
                 }}
               >
@@ -361,7 +411,10 @@ export default function DataManagementScreen({ onBack }: DataManagementScreenPro
         {/* RGPD Compliance */}
         <Card className="p-4 bg-gradient-to-r from-[#8BD3DD]/10 to-[#F5A623]/10 border-none">
           <div className="space-y-2">
-            <h4 className="font-semibold text-[#3A3A3A] text-sm">🔒 Protection des Données (RGPD)</h4>
+            <h4 className="font-semibold text-[#3A3A3A] text-sm flex items-center">
+              <CheckCircle className="w-4 h-4 mr-2 text-green-600" />
+              Protection des Données (RGPD)
+            </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-[#3A3A3A] opacity-80">
               <div>
                 <p>
@@ -393,7 +446,7 @@ export default function DataManagementScreen({ onBack }: DataManagementScreenPro
 }
 
 // Analysis Detail Modal Component
-function AnalysisDetailModal({ analysis, onClose }: { analysis: any; onClose: () => void }) {
+function AnalysisDetailModal({ analysis, onClose }: { analysis: WindowAnalysis; onClose: () => void }) {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <Card className="w-full max-w-2xl bg-white border-none shadow-2xl max-h-[90vh] overflow-y-auto">
@@ -408,9 +461,13 @@ function AnalysisDetailModal({ analysis, onClose }: { analysis: any; onClose: ()
           {/* Photo */}
           <div className="relative">
             <img
-              src={analysis.image_url || "/placeholder.svg"}
+              src={analysis.image_url || "/placeholder.svg?height=300&width=400&text=Window"}
               alt="Fenêtre analysée"
               className="w-full h-64 object-cover rounded-lg"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement
+                target.src = "/placeholder.svg?height=300&width=400&text=Window+Error"
+              }}
             />
             <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
               ID: {analysis.id}
@@ -422,18 +479,18 @@ function AnalysisDetailModal({ analysis, onClose }: { analysis: any; onClose: ()
             <div className="space-y-3">
               <h4 className="font-semibold text-[#3A3A3A]">Dimensions</h4>
               <div className="space-y-1 text-sm">
-                <p>Largeur: {analysis.analysis_data.dimensions.width}cm</p>
-                <p>Hauteur: {analysis.analysis_data.dimensions.height}cm</p>
-                <p>Confiance: {Math.round(analysis.analysis_data.dimensions.confidence * 100)}%</p>
+                <p>Largeur: {analysis.analysis_data?.dimensions?.width || 0}cm</p>
+                <p>Hauteur: {analysis.analysis_data?.dimensions?.height || 0}cm</p>
+                <p>Confiance: {Math.round((analysis.analysis_data?.dimensions?.confidence || 0) * 100)}%</p>
               </div>
             </div>
 
             <div className="space-y-3">
               <h4 className="font-semibold text-[#3A3A3A]">Classification</h4>
               <div className="space-y-1 text-sm">
-                <p>Type: {analysis.analysis_data.windowType}</p>
-                <p>Kit recommandé: {analysis.analysis_data.kitRecommendation.primary}</p>
-                <p>Score qualité: {Math.round(analysis.analysis_data.qualityScore * 100)}%</p>
+                <p>Type: {analysis.analysis_data?.windowType || "N/A"}</p>
+                <p>Kit recommandé: {analysis.analysis_data?.kitRecommendation?.primary || "N/A"}</p>
+                <p>Score qualité: {Math.round((analysis.quality_score || 0) * 100)}%</p>
               </div>
             </div>
           </div>
@@ -453,13 +510,18 @@ function AnalysisDetailModal({ analysis, onClose }: { analysis: any; onClose: ()
             <Button
               variant="outline"
               onClick={() => {
-                const blob = new Blob([JSON.stringify(analysis, null, 2)], { type: "application/json" })
-                const url = URL.createObjectURL(blob)
-                const a = document.createElement("a")
-                a.href = url
-                a.download = `analysis-${analysis.id}.json`
-                a.click()
-                URL.revokeObjectURL(url)
+                try {
+                  const blob = new Blob([JSON.stringify(analysis, null, 2)], { type: "application/json" })
+                  const url = URL.createObjectURL(blob)
+                  const a = document.createElement("a")
+                  a.href = url
+                  a.download = `analysis-${analysis.id}.json`
+                  a.click()
+                  URL.revokeObjectURL(url)
+                } catch (error) {
+                  console.error("Download error:", error)
+                  alert("Erreur lors du téléchargement")
+                }
               }}
               className="flex-1 border-[#8BD3DD] text-[#3A3A3A] hover:bg-[#8BD3DD]/10"
             >

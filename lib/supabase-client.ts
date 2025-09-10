@@ -1,10 +1,9 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js"
 
 // Configuration Supabase pour BreezeFrame
-const supabaseUrl = "https://pwjdrbllpyxvnqdrglpx.supabase.co"
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://pwjdrbllpyxvnqdrglpx.supabase.co"
 const supabaseAnonKey =
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-  process.env.SUPABASE_ANON_KEY ||
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3amRyYmxscHl4dm5xZHJnbHB4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY5NzI2MjQsImV4cCI6MjA1MjU0ODYyNH0.8xQVQOKJQBJGqGJGJGJGJGJGJGJGJGJGJGJGJGJGJGJG"
 
 console.log("🔗 Connexion Supabase:", supabaseUrl)
@@ -83,7 +82,7 @@ export interface ImportLog {
 // Fonctions d'aide pour la base de données
 export const windowAnalysisDB = {
   // Sauvegarder une analyse de fenêtre
-  async saveAnalysis(analysisData: Partial<WindowAnalysis>) {
+  async saveAnalysis(analysisData: Partial<WindowAnalysis>): Promise<WindowAnalysis> {
     try {
       const { data, error } = await supabase.from("window_analysis").insert(analysisData).select().single()
 
@@ -100,7 +99,7 @@ export const windowAnalysisDB = {
   },
 
   // Récupérer une analyse par ID
-  async getAnalysis(id: string) {
+  async getAnalysis(id: string): Promise<WindowAnalysis> {
     try {
       const { data, error } = await supabase.from("window_analysis").select("*").eq("id", id).single()
 
@@ -117,7 +116,7 @@ export const windowAnalysisDB = {
   },
 
   // Récupérer les analyses récentes
-  async getRecentAnalyses(limit = 10) {
+  async getRecentAnalyses(limit = 10): Promise<WindowAnalysis[]> {
     try {
       const { data, error } = await supabase
         .from("window_analysis")
@@ -127,7 +126,7 @@ export const windowAnalysisDB = {
 
       if (error) {
         console.error("Erreur récupération analyses récentes:", error)
-        throw error
+        return []
       }
 
       return data || []
@@ -138,7 +137,7 @@ export const windowAnalysisDB = {
   },
 
   // Récupérer les analyses par session
-  async getAnalysesBySession(sessionId: string) {
+  async getAnalysesBySession(sessionId: string): Promise<WindowAnalysis[]> {
     try {
       const { data, error } = await supabase
         .from("window_analysis")
@@ -148,7 +147,7 @@ export const windowAnalysisDB = {
 
       if (error) {
         console.error("Erreur récupération analyses session:", error)
-        throw error
+        return []
       }
 
       return data || []
@@ -159,14 +158,31 @@ export const windowAnalysisDB = {
   },
 
   // Alias pour compatibilité - récupérer les analyses utilisateur
-  async getUserAnalyses(sessionId: string) {
+  async getUserAnalyses(sessionId: string): Promise<WindowAnalysis[]> {
     return this.getAnalysesBySession(sessionId)
+  },
+
+  // Supprimer une analyse
+  async deleteAnalysis(id: string): Promise<boolean> {
+    try {
+      const { error } = await supabase.from("window_analysis").delete().eq("id", id)
+
+      if (error) {
+        console.error("Erreur suppression analyse:", error)
+        return false
+      }
+
+      return true
+    } catch (error) {
+      console.error("Erreur suppression analyse:", error)
+      return false
+    }
   },
 }
 
 // Fonctions pour les fabricants
 export const manufacturerDB = {
-  async getAllManufacturers() {
+  async getAllManufacturers(): Promise<WindowManufacturer[]> {
     try {
       const { data, error } = await supabase
         .from("window_manufacturers")
@@ -175,7 +191,7 @@ export const manufacturerDB = {
 
       if (error) {
         console.error("Erreur récupération fabricants:", error)
-        throw error
+        return []
       }
 
       return data || []
@@ -190,7 +206,7 @@ export const manufacturerDB = {
     product_type?: string
     color?: string
     brand?: string
-  }) {
+  }): Promise<WindowManufacturer[]> {
     try {
       let query = supabase.from("window_manufacturers").select("*")
 
@@ -211,7 +227,7 @@ export const manufacturerDB = {
 
       if (error) {
         console.error("Erreur recherche fabricants:", error)
-        throw error
+        return []
       }
 
       return data || []
@@ -221,7 +237,7 @@ export const manufacturerDB = {
     }
   },
 
-  async getRecommendations(analysisData: any) {
+  async getRecommendations(analysisData: any): Promise<WindowManufacturer[]> {
     const criteria: any = {}
 
     if (analysisData.material) {
@@ -240,7 +256,7 @@ export const manufacturerDB = {
 
 // Fonctions pour le dataset
 export const datasetDB = {
-  async getDatasetStats() {
+  async getDatasetStats(): Promise<any> {
     try {
       const { data, error } = await supabase
         .from("dataset_quick_stats")
@@ -261,7 +277,7 @@ export const datasetDB = {
     }
   },
 
-  async getTrainingReadyImages(limit = 100) {
+  async getTrainingReadyImages(limit = 100): Promise<ImageDataset[]> {
     try {
       const { data, error } = await supabase
         .from("image_dataset")
@@ -272,7 +288,7 @@ export const datasetDB = {
 
       if (error) {
         console.error("Erreur récupération images entraînement:", error)
-        throw error
+        return []
       }
 
       return data || []
@@ -282,7 +298,7 @@ export const datasetDB = {
     }
   },
 
-  async getImagesBySource(source: string) {
+  async getImagesBySource(source: string): Promise<ImageDataset[]> {
     try {
       const { data, error } = await supabase
         .from("image_dataset")
@@ -292,7 +308,7 @@ export const datasetDB = {
 
       if (error) {
         console.error("Erreur récupération images par source:", error)
-        throw error
+        return []
       }
 
       return data || []
@@ -302,7 +318,7 @@ export const datasetDB = {
     }
   },
 
-  async getAllImages(page = 0, limit = 50) {
+  async getAllImages(page = 0, limit = 50): Promise<{ data: ImageDataset[]; count: number }> {
     try {
       const { data, error, count } = await supabase
         .from("image_dataset")
@@ -312,7 +328,7 @@ export const datasetDB = {
 
       if (error) {
         console.error("Erreur récupération images:", error)
-        throw error
+        return { data: [], count: 0 }
       }
 
       return { data: data || [], count: count || 0 }
@@ -325,7 +341,7 @@ export const datasetDB = {
 
 // Fonctions pour les logs d'import
 export const importLogsDB = {
-  async getRecentLogs(limit = 20) {
+  async getRecentLogs(limit = 20): Promise<ImportLog[]> {
     try {
       const { data, error } = await supabase
         .from("import_logs")
@@ -335,7 +351,7 @@ export const importLogsDB = {
 
       if (error) {
         console.error("Erreur récupération logs import:", error)
-        throw error
+        return []
       }
 
       return data || []
@@ -345,7 +361,7 @@ export const importLogsDB = {
     }
   },
 
-  async logImport(logData: Partial<ImportLog>) {
+  async logImport(logData: Partial<ImportLog>): Promise<ImportLog> {
     try {
       const { data, error } = await supabase.from("import_logs").insert(logData).select().single()
 
@@ -364,7 +380,7 @@ export const importLogsDB = {
 
 // Utilitaires de base de données
 export const dbUtils = {
-  async testConnection() {
+  async testConnection(): Promise<{ connected: boolean; tablesExist: boolean; error: string | null }> {
     try {
       const { data, error } = await supabase.from("window_analysis").select("count", { count: "exact", head: true })
 
@@ -380,7 +396,7 @@ export const dbUtils = {
     }
   },
 
-  async getTableCounts() {
+  async getTableCounts(): Promise<Record<string, number>> {
     const tables = ["window_analysis", "window_manufacturers", "image_dataset", "import_logs"]
     const counts: Record<string, number> = {}
 
@@ -401,23 +417,27 @@ export const dbUtils = {
     return counts
   },
 
-  async createSampleData() {
+  async createSampleData(): Promise<WindowAnalysis> {
     try {
       const sampleAnalysis = {
+        id: `BF-AI-${Date.now()}`,
         user_session: `session_${Date.now()}`,
-        image_url: "/placeholder.svg?height=300&width=400",
+        image_url: "/placeholder.svg?height=300&width=400&text=Sample+Window",
         analysis_data: {
           dimensions: { width: 120, height: 150, confidence: 0.95 },
           windowType: "Standard Rectangle",
+          kitRecommendation: { primary: "solo" },
           recommendations: ["Perfect for BreezeFrame", "Good lighting conditions"],
         },
         frontend_validation: {
           windowDetected: true,
           confidence: 0.87,
           quality: "good",
+          lighting: "good",
         },
         processing_time_ms: 2300,
         quality_score: 0.94,
+        created_at: new Date().toISOString(),
       }
 
       const { data, error } = await supabase.from("window_analysis").insert(sampleAnalysis).select().single()

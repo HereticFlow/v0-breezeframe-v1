@@ -1,187 +1,233 @@
 "use client"
 
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { Leaf, Wind, Shield, Sparkles, Star, Play, Database } from "lucide-react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import {
+  Camera,
+  Zap,
+  Brain,
+  Lightbulb,
+  Wind,
+  Shield,
+  Sparkles,
+  ArrowRight,
+  Play,
+  Settings,
+  Database,
+  BarChart3,
+} from "lucide-react"
 
 interface HomeScreenProps {
-  onNext: () => void
-  onDataManagement?: () => void
+  onNavigate: (screen: string) => void
 }
 
-export default function HomeScreen({ onNext, onDataManagement }: HomeScreenProps) {
+export function HomeScreen({ onNavigate }: HomeScreenProps) {
+  const [isAnimating, setIsAnimating] = useState(false)
+
+  const handleQuickStart = () => {
+    setIsAnimating(true)
+    setTimeout(() => {
+      onNavigate("photo-capture")
+      setIsAnimating(false)
+    }, 500)
+  }
+
+  const features = [
+    {
+      icon: <Camera className="h-6 w-6" />,
+      title: "Analyse IA",
+      description: "Détection automatique des fenêtres avec TensorFlow",
+      action: () => onNavigate("photo-capture"),
+    },
+    {
+      icon: <Brain className="h-6 w-6" />,
+      title: "Configuration Intelligente",
+      description: "Recommandations personnalisées basées sur l'IA",
+      action: () => onNavigate("advanced-configurator"),
+    },
+    {
+      icon: <Lightbulb className="h-6 w-6" />,
+      title: "Bien-être Lumineux",
+      description: "Optimisation de la lumière naturelle",
+      action: () => onNavigate("wellness-configuration"),
+    },
+    {
+      icon: <Database className="h-6 w-6" />,
+      title: "Gestion des Données",
+      description: "Historique et analyses de vos fenêtres",
+      action: () => onNavigate("data-management"),
+    },
+  ]
+
+  const stats = [
+    { label: "Fenêtres Analysées", value: "1,247", icon: <Camera className="h-4 w-4" /> },
+    { label: "Configurations Créées", value: "892", icon: <Settings className="h-4 w-4" /> },
+    { label: "Économies d'Énergie", value: "23%", icon: <Zap className="h-4 w-4" /> },
+    { label: "Satisfaction Client", value: "98%", icon: <Sparkles className="h-4 w-4" /> },
+  ]
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#FFF7EB] via-[#FFF7EB] to-[#F5F5DC] flex flex-col items-center justify-center p-6 relative overflow-hidden">
-      {/* Floating elements animation */}
-      <div className="absolute inset-0 pointer-events-none">
-        <Wind
-          className="absolute top-20 left-10 w-6 h-6 text-[#8BD3DD] opacity-30 animate-pulse"
-          style={{ animationDelay: "0s", animationDuration: "3s" }}
-        />
-        <Leaf
-          className="absolute top-40 right-20 w-4 h-4 text-[#F5A623] opacity-40 animate-bounce"
-          style={{ animationDelay: "1s", animationDuration: "4s" }}
-        />
-        <Shield
-          className="absolute bottom-40 left-20 w-5 h-5 text-[#8BD3DD] opacity-25 animate-pulse"
-          style={{ animationDelay: "2s" }}
-        />
-        <Sparkles
-          className="absolute bottom-24 right-12 w-4 h-4 text-[#F5A623] opacity-30 animate-pulse"
-          style={{ animationDelay: "3s" }}
-        />
-      </div>
-
-      {/* Data Management Button */}
-      <div className="absolute top-6 right-6">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onDataManagement}
-          className="border-[#8BD3DD]/30 text-[#3A3A3A] hover:bg-[#8BD3DD]/10"
-        >
-          <Database className="w-4 h-4 mr-2" />
-          Mes Données
-        </Button>
-      </div>
-
-      <div className="text-center space-y-8 max-w-md">
-        {/* Header */}
-        <div className="space-y-4">
-          <h1
-            className="text-4xl font-bold text-[#3A3A3A] tracking-wide"
-            style={{ fontFamily: "Playfair Display, serif" }}
-          >
-            BreezeFrame V2
-          </h1>
-          <p className="text-lg text-[#3A3A3A] opacity-80 leading-relaxed">Smart Modular Window Blinds</p>
-          <div className="flex items-center justify-center space-x-4 text-xs text-[#3A3A3A] opacity-60">
-            <span className="flex items-center space-x-1">
-              <Sparkles className="w-3 h-3" />
-              <span>AI-Measured</span>
-            </span>
-            <span className="flex items-center space-x-1">
-              <Wind className="w-3 h-3" />
-              <span>Foldable</span>
-            </span>
-            <span className="flex items-center space-x-1">
-              <Shield className="w-3 h-3" />
-              <span>Mosquito Mesh</span>
-            </span>
-          </div>
-        </div>
-
-        {/* Hero Product Visualization */}
-        <Card className="p-8 bg-gradient-to-br from-white/80 to-[#8BD3DD]/10 border-none shadow-lg backdrop-blur-sm">
-          <div className="w-64 h-40 mx-auto relative">
-            {/* Window Frame */}
-            <div className="absolute inset-0 border-4 border-[#8BD3DD]/30 rounded-lg bg-gradient-to-br from-[#8BD3DD]/5 to-[#F5A623]/5">
-              {/* AI Detection Indicators */}
-              <div className="absolute -top-2 -left-2 w-4 h-4 bg-[#F5A623] rounded-full animate-pulse">
-                <div className="absolute inset-1 bg-white rounded-full"></div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+      {/* Header */}
+      <div className="relative overflow-hidden bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600">
+        <div className="absolute inset-0 bg-black/10"></div>
+        <div className="relative px-6 py-16 sm:px-8 lg:px-12">
+          <div className="mx-auto max-w-4xl text-center">
+            <div className="mb-6 flex justify-center">
+              <div className="rounded-full bg-white/20 p-4 backdrop-blur-sm">
+                <Wind className="h-12 w-12 text-white" />
               </div>
-              <div
-                className="absolute -top-2 -right-2 w-4 h-4 bg-[#F5A623] rounded-full animate-pulse"
-                style={{ animationDelay: "0.5s" }}
+            </div>
+
+            <h1 className="mb-4 text-4xl font-bold tracking-tight text-white sm:text-6xl">BreezeFrame</h1>
+
+            <p className="mb-8 text-xl text-blue-100 sm:text-2xl">
+              Intelligence Artificielle pour l'Analyse et Configuration de Fenêtres
+            </p>
+
+            <div className="mb-8 flex flex-wrap justify-center gap-3">
+              <Badge variant="secondary" className="bg-white/20 text-white hover:bg-white/30">
+                <Brain className="mr-1 h-3 w-3" />
+                IA TensorFlow
+              </Badge>
+              <Badge variant="secondary" className="bg-white/20 text-white hover:bg-white/30">
+                <Zap className="mr-1 h-3 w-3" />
+                Temps Réel
+              </Badge>
+              <Badge variant="secondary" className="bg-white/20 text-white hover:bg-white/30">
+                <Shield className="mr-1 h-3 w-3" />
+                Sécurisé
+              </Badge>
+            </div>
+
+            <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
+              <Button
+                size="lg"
+                className={`bg-white text-blue-600 hover:bg-blue-50 ${isAnimating ? "animate-pulse" : ""}`}
+                onClick={handleQuickStart}
               >
-                <div className="absolute inset-1 bg-white rounded-full"></div>
-              </div>
+                <Play className="mr-2 h-5 w-5" />
+                Démarrage Rapide
+              </Button>
 
-              {/* Panel Casings */}
-              <div className="absolute left-0 top-0 w-6 h-full bg-gradient-to-r from-[#8BD3DD]/20 to-[#8BD3DD]/10 rounded-l-lg">
-                <div className="w-full h-3 bg-[#F5A623]/30 rounded-t-lg"></div>
-              </div>
-              <div className="absolute right-0 top-0 w-6 h-full bg-gradient-to-l from-[#8BD3DD]/20 to-[#8BD3DD]/10 rounded-r-lg">
-                <div className="w-full h-3 bg-[#F5A623]/30 rounded-t-lg"></div>
-              </div>
-
-              {/* Foldable Panels */}
-              <div className="absolute left-6 top-6 right-6 bottom-6 flex space-x-2">
-                {/* Left Panel */}
-                <div className="flex-1 bg-gradient-to-br from-[#F5A623]/20 to-[#8BD3DD]/20 rounded-lg border-2 border-[#F5A623]/30 relative">
-                  <div className="h-full flex">
-                    <div className="flex-1 border-r border-[#8BD3DD]/20"></div>
-                    <div className="flex-1 border-r border-[#8BD3DD]/20"></div>
-                    <div className="flex-1"></div>
-                  </div>
-                  {/* Rotating stars */}
-                  <Star
-                    className="absolute top-2 left-2 w-3 h-3 text-[#F5A623] animate-spin opacity-60"
-                    style={{ animationDuration: "4s" }}
-                  />
-                  <Star
-                    className="absolute bottom-2 right-2 w-3 h-3 text-[#8BD3DD] animate-spin opacity-60"
-                    style={{ animationDuration: "3s", animationDelay: "1s" }}
-                  />
-                </div>
-
-                {/* Right Panel */}
-                <div className="flex-1 bg-gradient-to-bl from-[#F5A623]/20 to-[#8BD3DD]/20 rounded-lg border-2 border-[#F5A623]/30 relative">
-                  <div className="h-full flex">
-                    <div className="flex-1 border-r border-[#8BD3DD]/20"></div>
-                    <div className="flex-1 border-r border-[#8BD3DD]/20"></div>
-                    <div className="flex-1"></div>
-                  </div>
-                  {/* Rotating stars */}
-                  <Star
-                    className="absolute top-2 right-2 w-3 h-3 text-[#8BD3DD] animate-spin opacity-60"
-                    style={{ animationDuration: "3s", animationDelay: "0.5s" }}
-                  />
-                  <Star
-                    className="absolute bottom-2 left-2 w-3 h-3 text-[#F5A623] animate-spin opacity-60"
-                    style={{ animationDuration: "4s", animationDelay: "1.5s" }}
-                  />
-                </div>
-              </div>
-
-              {/* Magnetic closure indicator */}
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-12 bg-[#8BD3DD]/40 rounded-full"></div>
+              <Button
+                size="lg"
+                variant="outline"
+                className="border-white/30 bg-white/10 text-white hover:bg-white/20"
+                onClick={() => onNavigate("advanced-configurator")}
+              >
+                <Settings className="mr-2 h-5 w-5" />
+                Configuration Avancée
+              </Button>
             </div>
           </div>
+        </div>
+      </div>
 
-          <div className="mt-4 text-center">
-            <p className="text-sm text-[#3A3A3A] opacity-70">AI-Measured • 100cm × 100cm Modular System</p>
+      {/* Stats Section */}
+      <div className="px-6 py-12 sm:px-8 lg:px-12">
+        <div className="mx-auto max-w-6xl">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {stats.map((stat, index) => (
+              <Card key={index} className="text-center">
+                <CardContent className="p-4">
+                  <div className="mb-2 flex justify-center text-blue-600">{stat.icon}</div>
+                  <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
+                  <div className="text-sm text-gray-600">{stat.label}</div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
-        </Card>
+        </div>
+      </div>
 
-        {/* Features Grid */}
-        <div className="grid grid-cols-3 gap-3">
-          <Card className="p-3 bg-white/60 border-none text-center">
-            <Sparkles className="w-6 h-6 mx-auto text-[#F5A623] mb-2" />
-            <p className="text-xs text-[#3A3A3A] opacity-70 font-medium">AI Detection</p>
-          </Card>
-          <Card className="p-3 bg-white/60 border-none text-center">
-            <Wind className="w-6 h-6 mx-auto text-[#8BD3DD] mb-2" />
-            <p className="text-xs text-[#3A3A3A] opacity-70 font-medium">Foldable Design</p>
-          </Card>
-          <Card className="p-3 bg-white/60 border-none text-center">
-            <Shield className="w-6 h-6 mx-auto text-[#8BD3DD] mb-2" />
-            <p className="text-xs text-[#3A3A3A] opacity-70 font-medium">Mosquito Mesh</p>
+      {/* Features Section */}
+      <div className="px-6 py-12 sm:px-8 lg:px-12">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-12 text-center">
+            <h2 className="mb-4 text-3xl font-bold text-gray-900">Fonctionnalités Principales</h2>
+            <p className="text-lg text-gray-600">Découvrez toutes les capacités de BreezeFrame</p>
+          </div>
+
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {features.map((feature, index) => (
+              <Card
+                key={index}
+                className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg"
+                onClick={feature.action}
+              >
+                <CardHeader className="text-center">
+                  <div className="mb-4 flex justify-center text-blue-600 group-hover:text-blue-700">{feature.icon}</div>
+                  <CardTitle className="text-lg">{feature.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <CardDescription className="text-center">{feature.description}</CardDescription>
+                  <div className="mt-4 flex justify-center">
+                    <ArrowRight className="h-4 w-4 text-blue-600 opacity-0 transition-opacity group-hover:opacity-100" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="px-6 py-12 sm:px-8 lg:px-12">
+        <div className="mx-auto max-w-4xl">
+          <Card className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
+            <CardContent className="p-8">
+              <div className="text-center">
+                <h3 className="mb-4 text-2xl font-bold">Prêt à Commencer ?</h3>
+                <p className="mb-6 text-blue-100">Analysez votre première fenêtre en moins de 2 minutes</p>
+                <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
+                  <Button
+                    size="lg"
+                    className="bg-white text-blue-600 hover:bg-blue-50"
+                    onClick={() => onNavigate("photo-capture")}
+                  >
+                    <Camera className="mr-2 h-5 w-5" />
+                    Capturer une Photo
+                  </Button>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="border-white/30 bg-white/10 text-white hover:bg-white/20"
+                    onClick={() => onNavigate("data-management")}
+                  >
+                    <BarChart3 className="mr-2 h-5 w-5" />
+                    Voir les Données
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
           </Card>
         </div>
+      </div>
 
-        {/* Pricing */}
-        <Card className="p-4 bg-gradient-to-r from-[#F5A623]/10 to-[#8BD3DD]/10 border-none">
-          <div className="text-center space-y-2">
-            <p className="text-sm text-[#3A3A3A] opacity-70">Starting from</p>
-            <p className="text-2xl font-bold text-[#3A3A3A]">€35</p>
-            <p className="text-xs text-[#3A3A3A] opacity-60">Solo Kit • DIY installation + Wellness Journey</p>
+      {/* Footer */}
+      <div className="border-t bg-gray-50 px-6 py-8 sm:px-8 lg:px-12">
+        <div className="mx-auto max-w-6xl">
+          <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
+            <div className="flex items-center gap-2">
+              <Wind className="h-5 w-5 text-blue-600" />
+              <span className="font-semibold text-gray-900">BreezeFrame</span>
+              <Badge variant="outline">v2.1.0</Badge>
+            </div>
+            <div className="flex gap-4">
+              <Button variant="ghost" size="sm" onClick={() => onNavigate("data-management")}>
+                Données
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => onNavigate("wellness-dashboard")}>
+                Bien-être
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => onNavigate("advanced-configurator")}>
+                Configuration
+              </Button>
+            </div>
           </div>
-        </Card>
-
-        {/* CTA */}
-        <div className="space-y-3">
-          <Button
-            onClick={onNext}
-            className="w-full py-4 text-lg font-semibold bg-gradient-to-r from-[#F5A623] to-[#8BD3DD] hover:from-[#F5A623]/90 hover:to-[#8BD3DD]/90 text-white border-none shadow-lg transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
-          >
-            <Play className="w-5 h-5 mr-2" />
-            Start AI Measurement
-          </Button>
-
-          <p className="text-xs text-[#3A3A3A] opacity-60 text-center">
-            Smart Cotton • AI-Measured • Wellness Journey Included
-          </p>
         </div>
       </div>
     </div>

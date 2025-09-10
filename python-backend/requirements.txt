@@ -1,0 +1,49 @@
+# BreezeFrame Python Backend Requirements
+# Installation: pip install -r requirements.txt
+
+# Framework web
+Flask==2.3.3
+Flask-CORS==4.0.0
+
+# Intelligence artificielle et vision par ordinateur
+tensorflow==2.13.0
+opencv-python==4.8.1.78
+numpy==1.24.3
+Pillow==10.0.1
+
+# Utilitaires
+requests==2.31.0
+python-dotenv==1.0.0
+
+# Développement et tests
+pytest==7.4.2
+pytest-flask==1.2.0
+
+# Production
+gunicorn==21.2.0
+waitress==2.1.2
+
+# Monitoring et logging
+psutil==5.9.5
+
+# Sécurité
+cryptography==41.0.4
+
+# Base de données (optionnel)
+psycopg2-binary==2.9.7
+SQLAlchemy==2.0.21
+
+# Formats de données
+pyyaml==6.0.1
+jsonschema==4.19.1
+
+# Optimisation d'images
+imageio==2.31.3
+scikit-image==0.21.0
+
+# Calculs scientifiques
+scipy==1.11.3
+pandas==2.1.1
+
+# Gestion des environnements
+python-decouple==3.8
